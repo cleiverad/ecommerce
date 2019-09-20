@@ -194,8 +194,27 @@ Class Cart extends Model{
 
 		if ($totals['nrqtd'] > 0 ){
 
-			if ($totals['vlheight'] < 2) $totals['vlheight'] = 2;
-			if ($totals['vllength'] < 16) $totals['vllength'] = 16;
+			//Altura
+			if($totals['vlheight'] < 2) $totals['vlheight'] = 2;
+			if($totals['vlheight'] > 105) $totals['vlheight'] = 105;
+			
+			//nVlLargura
+			if($totals['vlwidth'] < 11) $totals['vlwidth'] = 11;
+			if($totals['vlwidth'] > 105) $totals['vlwidth'] = 105;
+			
+			//Comprimento
+			if($totals['vllength'] <16) $totals['vllength'] = 16;
+			if($totals['vllength'] >105) $totals['vllength'] = 105;
+	
+			if($totals['vlheight'] + $totals['vlwidth'] + $totals['vllength'] < 29)
+				$totals['vlheight'] = 20;
+	
+			if($totals['vlheight'] + $totals['vlwidth'] + $totals['vllength'] > 200)
+			{
+					$totals['vlheight'] = 8;			
+					$totals['vlwidth'] = 11;
+					$totals['vllength'] = 16;
+			}
 
 			$qs = http_build_query([
 				"nCdEmpresa"=>'',
@@ -214,32 +233,45 @@ Class Cart extends Model{
 				"sCdAvisoRecebimento"=>'S'
 			]);
 
-			//$xml = simplexml_load_file("http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx/CalcPrecoPrazo?".$qs);
-			//$result = $xml->Servicos->cServico;
+			$url = "http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx/CalcPrecoPrazo?";
 
-			//if ($result->MsgErro != '') {
+			$xmlString = $this->curl_get_file_contents($url.$qs);
+			$xml = simplexml_load_string($xmlString);
+			
+			$result = $xml->Servicos->cServico;
 
-				//Cart::setMsgError($result->MsgErro);
+			if($result->MsgErro != '')
+			{
+				Cart::setMsgError($result->MsgErro);
+			}else{
+				Cart::clearMsgError($result->MsgErro);
+			}
 
-			//} else {
-
-				//Cart::clearMsgError();
-
-			//}
-
-			$this->setnrdays('3');
-			$this->setvlfreight(Cart::formatValueToDecimal('47,50'));
+			$this->setnrdays($result->PrazoEntrega);
+			$this->setvlfreight(Cart::formatValueToDecimal($result->Valor));
 			$this->setdeszipcode($nrzipcode);
 
 			$this->save();
 
-			return [];
+			return $result;
 
 		} else {
 
 
 		}
 
+	}
+	
+	public function curl_get_file_contents($URL)
+	{
+	    $c = curl_init();
+	    curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+	    curl_setopt($c, CURLOPT_URL, $URL);
+	    $contents = curl_exec($c);
+	    curl_close($c);
+
+	    if ($contents) return $contents;
+	        else return FALSE;
 	}
 
 	public static function formatValueToDecimal($value):float{
@@ -249,7 +281,7 @@ Class Cart extends Model{
 
 		}
 
-	public static function setMsgError(){
+	public static function setMsgError($msg){
 
 		$_SESSION[Cart::SESSION_ERROR] = $msg;
 
