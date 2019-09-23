@@ -42,9 +42,13 @@
             </div>
             <div class="col-md-6">
                 
+                <?php if( $error != '' ){ ?>
+
                 <div class="alert alert-danger">
-                    Error!
+                    {Error}
                 </div>
+                <?php } ?>
+
 
                 <form id="register-form-wrap" action="/register" class="register" method="post">
                     <h2>Criar conta</h2>

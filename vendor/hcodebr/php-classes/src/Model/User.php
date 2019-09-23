@@ -34,10 +34,11 @@ Class User extends Model{
 			!$_SESSION[User::SESSION] || 
 			!(int)$_SESSION[User::SESSION]["iduser"] > 0 ){
 			//Usuário não esta logado
+
 			return false;
 		
 		} else {
-
+	
 			if ($inadmin === true && (bool)$_SESSION[User::SESSION]["inadmin"] === true){
 
 				return true;
@@ -59,7 +60,7 @@ Class User extends Model{
 
 		$sql = new Sql();
 
-		$results = $sql->select("SELECT * FROM tb_users WHERE deslogin = :LOGIN", array(
+		$results = $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b ON a.idperson = b.idperson and a.deslogin = :LOGIN", array(
 			":LOGIN"=>$login
 		));
 
@@ -74,6 +75,8 @@ Class User extends Model{
 		if (password_verify($password, $data["despassword"]) === true){
 
 			$user = new User();
+
+			$data['desperson'] = utf8_encode($data['desperson']);
 
 			$user->setData($data);
 
@@ -90,7 +93,7 @@ Class User extends Model{
 
 	public static function verifyLogin($inadmin = true){
 
-		if (User::checkLogin($inadmin)){
+		if (!User::checkLogin($inadmin)){
 
 			if ($inadmin){
 
@@ -128,9 +131,9 @@ Class User extends Model{
 		$Sql = new Sql();
 
 		$results = $Sql->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
-			"desperson"=>$this->getdesperson(),
+			"desperson"=>utf8_decode($this->getdesperson()),
 			"deslogin"=>$this->getdeslogin(),
-			"despassword"=>$this->getdespassword(),
+			"despassword"=>User::getPasswordHash($this->getdespassword()),
 			"desemail"=>$this->getdesemail(),
 			"nrphone"=>$this->getnrphone(),
 			"inadmin"=>$this->getinadmin()
@@ -148,6 +151,10 @@ Class User extends Model{
 			":iduser"=>$iduser
 		));
 		
+		$data = $results[0];
+
+		$data['desperson'] = utf8_encode($data['desperson']);
+		
 		$this->setData($results[0]);
 	}
 
@@ -157,9 +164,9 @@ Class User extends Model{
 
 		$results = $Sql->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
 			"iduser"=>$this->getiduser(),
-			"desperson"=>$this->getdesperson(),
+			"desperson"=>utf8_decode($this->getdesperson()),
 			"deslogin"=>$this->getdeslogin(),
-			"despassword"=>$this->getdespassword(),
+			"despassword"=>User::getPasswordHash($this->getdespassword()),
 			"desemail"=>$this->getdesemail(),
 			"nrphone"=>$this->getnrphone(),
 			"inadmin"=>$this->getinadmin()
@@ -302,6 +309,13 @@ Class User extends Model{
 
 		$_SESSION[User::ERROR_REGISTER] = $msg;
 
+	}
+
+	public function getPasswordHash($password){
+
+		return password_hash($password, PASSWORD_DEFAULT, [
+			'cost'=>12
+		]);
 	}
 
 }
