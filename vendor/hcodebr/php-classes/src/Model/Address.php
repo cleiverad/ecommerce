@@ -49,18 +49,6 @@ Class Address extends Model{
 
         $sql = new Sql();
 
-    //    echo '1 - '.$this->getidaddress().'<br>';
-     //   echo '2 - '.$this->getidperson().'<br>';
-     //   echo '3 - '.$this->getdesaddress().'<br>';
-     //   echo '4 - '.$this->getdescomplement().'<br>';
-    //    echo '5 - '.$this->getdescity().'<br>';
-    //    echo '6 - '.$this->getdesstate().'<br>';
-    //    echo '7 - '.$this->getdescountry().'<br>';
-    //    echo '8 - '.$this->getdeszipcode().'<br>';
-    //    echo '9 - '.$this->getdesdistrict().'<br>';
-
-    //    exit;
-
         $results = $sql->select("CALL sp_addresses_save(:idaddress, :idperson, :desaddress, :descomplement, :descity, :desstate, :descountry, :deszipcode, :desdistrict)", [
             ':idaddress'=>$this->getidaddress(),
             ':idperson'=>$this->getidperson(),
