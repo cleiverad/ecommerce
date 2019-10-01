@@ -13,7 +13,7 @@ $app->get('/admin/users', function(){
 
 	if ($search != ''){
 
-		$pagination = User::getPageSearch($search);
+		$pagination = User::getPageSearch($search, $page);
 
 	} else {
 
